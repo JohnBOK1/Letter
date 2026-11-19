@@ -1,22 +1,57 @@
-BLOOM — Personal Letter to Tina
+BLOOM LETTER — ADMIN EDITOR (GitHub Pages)
+===========================================
 
-A complete offline pink-themed animated website.
+The full letter to Tina, envelope, blooms, falling hearts and animation are included.
+This version also includes a top-right "Admin login" button and an online letter editor.
 
-HOW TO OPEN
-1. Extract the ZIP file.
-2. Open index.html in Chrome, Edge, Firefox, or Safari.
-3. Click the floating pink envelope to reveal the flowers and the full letter.
-4. Use Open again to replay the animation.
+IMPORTANT: GitHub Pages is static, so a normal username/password login cannot be made secure using HTML/JS alone. This project uses GitHub authentication with a fine-grained personal access token. The token is typed manually into the editor and held only in the tab's memory: never committed or saved in a file/localStorage/cookie.
 
-HOW TO EDIT IN VS CODE
-1. Open this folder in VS Code.
-2. Open index.html with Live Server if you prefer. (Optional.)
-3. Edit the LETTER object at the top of script.js to customize the words.
+SET UP (ONCE):
+1. Extract this ZIP. It contains index.html, script.js, style.css, letter.json,
+   favicon.svg, README.txt at the root. No extra folder needs to go in the repo.
+2. Copy the files into your LOCAL Letter repository folder in VS Code,
+   replacing the existing website files. Keep your existing vendor folder if any.
+3. In the VS Code terminal inside that repository folder:
+      git add .
+      git commit -m "Add admin letter editor"
+      git push
+4. Keep GitHub Pages configured to main / (root).
+   Website URL: https://johnbok1.github.io/Letter/
 
-No npm, installs, build commands, external libraries, or internet connection required.
+CREATE A GITHUB TOKEN (ONCE PER TOKEN):
+1. Visit https://github.com/settings/personal-access-tokens/new
+2. Token name: Bloom Letter Editor
+3. Resource owner: JohnBOK1
+4. Repository access: Only select repositories > Letter
+5. Repository permissions > Contents > Read and write
+6. Choose an expiration date (short-lived is safer), then generate token.
+7. Copy the token and KEEP IT PRIVATE. Do not commit it to GitHub or share it.
 
-FILES
-- index.html: website structure
-- style.css: pink layout, stationery design, and background effects
-- script.js: the complete letter and interactive animations
-- favicon.svg: pink heart icon
+EDIT THE LETTER (ANY TIME):
+1. Visit your published website on a device you trust.
+2. Click "Admin login" in the top bar, paste the token, click Unlock editor.
+3. Edit greeting / body / signature.
+4. Click Preview on page if you want, then Save & Publish.
+5. A GitHub commit is created updating only letter.json. GitHub Pages will
+   publish it automatically after deployment completes.
+6. Click "Log out" to forget the token from this tab, or close/reload the tab.
+
+BEHAVIOR:
+- Visitors do not need a login; everyone sees letter.json loaded from the site.
+- Other devices see the latest published version after GitHub Pages deploys.
+- A preview is only visible in your current tab until it is saved.
+- If you edit letter.json somewhere else during an editor session, sign in
+  again to avoid overwriting a newer version.
+- The repository is public, so the letter itself is PUBLIC. The login button
+  only prevents unauthorized editing; it does not make the letter private.
+- If you view the site offline, it still displays the original letter.
+
+FILES:
+- index.html: website and admin login/editor dialogs
+- script.js: animations, letter rendering and GitHub editor
+- style.css: entire page and dialogs
+- letter.json: editable content; GitHub editor saves changes here
+- favicon.svg: icon
+- README.txt: these instructions
+
+No Node.js, npm, database or external JS libraries required.

@@ -1,18 +1,41 @@
-/* PERSONALIZE YOUR LETTER HERE. Plain text only; paragraphs may be added. */
-const LETTER = {
-  greeting: 'To Maximillian,',
-  paragraphs: [
-    "I don't know where to begin but maxi i love you shetibaby",
+/* Default letter shown immediately. Published changes are loaded from letter.json. */
+const DEFAULT_LETTER = {
+  "greeting": "To the girl I still love,",
+  "paragraphs": [
+    "I don't know where to begin, but one thing I know for sure is that my love for you was real, and it still is.",
+    "For four years, you were my favorite person, my comfort, and the person I wanted to share every little moment of my life with. I miss our random conversations, our laughter, our excitement to talk to each other, and the way we loved each other during our first few years together.",
+    "If only I could turn back time, I would do so many things differently. I would be less demanding, understand you better, respect your time and freedom, and give you the happiness you deserved.",
+    "Despite everything that happened, I can't bring myself to hate you. Yes, you hurt me in ways I never imagined, but that doesn't erase the beautiful memories we shared or the love I have for you.",
+    "A part of me still wishes we could start over, fall in love again, and make things right. But I also know that love cannot be forced, and I respect whatever your heart chooses.",
+    "Even if I'm no longer the person you want beside you, I hope life treats you kindly. I hope you achieve your dreams, find your happiness, and experience the peace you've always wanted.",
+    "I'm not writing this to make you feel guilty or to ask you to come back. I just want you to know how much you meant to me and how grateful I am for the years we shared.",
+    "Perhaps someday, I'll learn to live without missing you this much. But for now, I'm still learning how to let go of the girl I once imagined spending the rest of my life with.",
+    "I love you, Tina. And a part of me will always cherish what we once had."
   ],
-  signature: 'Always, with love.'
+  "signature": "Always, with love."
 };
-
+let currentLetter = structuredClone(DEFAULT_LETTER);
 const $ = (selector) => document.querySelector(selector);
-$('#greeting').textContent = LETTER.greeting;
-$('#signature').textContent = LETTER.signature;
-LETTER.paragraphs.forEach(text => {
-  const p = document.createElement('p'); p.textContent = text; $('#message').append(p);
-});
+
+function validLetter(data) {
+  return Boolean(data && typeof data.greeting === 'string' && data.greeting.trim()
+    && Array.isArray(data.paragraphs) && data.paragraphs.length > 0
+    && data.paragraphs.every(p => typeof p === 'string' && p.trim())
+    && typeof data.signature === 'string' && data.signature.trim());
+}
+function renderLetter(data) {
+  $('#greeting').textContent = data.greeting;
+  $('#signature').textContent = data.signature;
+  $('#message').replaceChildren();
+  data.paragraphs.forEach(text => {
+    const p = document.createElement('p');
+    p.textContent = text;
+    $('#message').append(p);
+  });
+  if (typeof opened !== 'undefined' && opened && !$('#letter').hidden) {
+    sizeSceneToLetter();
+  }
+}
 
 // Local SVG artwork: each flower has individually animated petals.
 const NS = 'http://www.w3.org/2000/svg';
@@ -209,3 +232,225 @@ if (typeof reduced.addEventListener === 'function') {
   reduced.addEventListener('change', e => { calm = e.matches; updateMotion(); });
 }
 reset();
+
+
+// -------- GitHub Pages admin editor --------
+// For a static GitHub Pages site we cannot safely embed a password.
+// Use a short-lived, repository-scoped GitHub PAT entered only in this tab.
+// The token is never written to HTML, localStorage, cookies or the repository.
+const GITHUB_OWNER = 'JohnBOK1';
+const GITHUB_REPO = 'Letter';
+const GITHUB_BRANCH = 'main';
+const LETTER_PATH = 'letter.json';
+const githubFileUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${LETTER_PATH}`;
+let adminToken = null;
+let knownFileSha = null;
+let isBusy = false;
+
+async function loadPublishedLetter() {
+  try {
+    const response = await fetch(`./letter.json?fresh=${Date.now()}`, {cache: 'no-store'});
+    if (!response.ok) return;
+    const data = await response.json();
+    if (!validLetter(data)) return;
+    currentLetter = data;
+    renderLetter(currentLetter);
+  } catch (_) {
+    // Opening index.html locally or offline still displays the default letter.
+  }
+}
+
+function setFeedback(selector, text, kind = '') {
+  const node = $(selector);
+  node.textContent = text;
+  node.className = `form-feedback ${kind}`.trim();
+}
+function openDialog(id, focusSelector) {
+  $(id).hidden = false;
+  document.body.classList.add('dialog-open');
+  $(focusSelector).focus();
+}
+function closeDialog(id) {
+  if (isBusy) return;
+  $(id).hidden = true;
+  if ($('#login-overlay').hidden && $('#editor-overlay').hidden) {
+    document.body.classList.remove('dialog-open');
+  }
+}
+function showEditor() {
+  if (!adminToken) return;
+  $('#edit-greeting').value = currentLetter.greeting;
+  $('#edit-message').value = currentLetter.paragraphs.join('\n\n');
+  $('#edit-signature').value = currentLetter.signature;
+  setFeedback('#editor-feedback', '');
+  openDialog('#editor-overlay', '#edit-greeting');
+}
+function readDraft() {
+  const draft = {
+    greeting: $('#edit-greeting').value.trim(),
+    paragraphs: $('#edit-message').value.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean),
+    signature: $('#edit-signature').value.trim()
+  };
+  if (!validLetter(draft)) throw new Error('Please add a greeting, at least one paragraph and a signature.');
+  return draft;
+}
+function setBusy(busy) {
+  isBusy = busy;
+  $('#login-submit').disabled = busy;
+  $('#publish-letter').disabled = busy;
+  $('#preview-letter').disabled = busy;
+  $('#close-login').disabled = busy;
+  $('#close-editor').disabled = busy;
+}
+async function githubRequest(url, options = {}) {
+  if (!adminToken) throw new Error('Please sign in again.');
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      Accept: 'application/vnd.github+json',
+      Authorization: `Bearer ${adminToken}`,
+      'X-GitHub-Api-Version': '2022-11-28',
+      ...(options.headers || {})
+    },
+    cache: 'no-store'
+  });
+  if (!response.ok) {
+    if (response.status === 404 && options.allowMissing) return null;
+    const body = await response.json().catch(() => ({}));
+    let message = body.message || `GitHub request failed (${response.status}).`;
+    if (response.status === 401) message = 'Invalid or expired token. Create a new token and try again.';
+    if (response.status === 403) message = 'Access denied. Check that your token allows Contents: Read and write for the Letter repository.';
+    if (response.status === 409) message = 'The repository changed while saving. Reload the editor and try again.';
+    throw new Error(message);
+  }
+  return response.json();
+}
+async function readGithubFile() {
+  return githubRequest(`${githubFileUrl}?ref=${encodeURIComponent(GITHUB_BRANCH)}&nocache=${Date.now()}`, {allowMissing: true});
+}
+function base64EncodeUnicode(text) {
+  const bytes = new TextEncoder().encode(text);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += 8192) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+  }
+  return btoa(binary);
+}
+function base64DecodeUnicode(text) {
+  const binary = atob(text.replace(/\s/g, ''));
+  const bytes = Uint8Array.from(binary, ch => ch.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+$('#admin-login').addEventListener('click', () => openDialog('#login-overlay', '#github-token'));
+$('#close-login').addEventListener('click', () => closeDialog('#login-overlay'));
+$('#admin-edit').addEventListener('click', showEditor);
+$('#close-editor').addEventListener('click', () => closeDialog('#editor-overlay'));
+$('#admin-logout').addEventListener('click', () => {
+  if (isBusy) return;
+  adminToken = null;
+  knownFileSha = null;
+  $('#github-token').value = '';
+  $('#admin-login').hidden = false;
+  $('#admin-edit').hidden = true;
+  $('#admin-logout').hidden = true;
+  closeDialog('#editor-overlay');
+  setFeedback('#login-feedback', '');
+});
+for (const id of ['#login-overlay', '#editor-overlay']) {
+  $(id).addEventListener('click', event => {
+    if (event.target === $(id)) closeDialog(id);
+  });
+}
+document.addEventListener('keydown', event => {
+  if (event.key !== 'Escape') return;
+  if (!$('#editor-overlay').hidden) closeDialog('#editor-overlay');
+  else if (!$('#login-overlay').hidden) closeDialog('#login-overlay');
+});
+
+$('#login-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const token = $('#github-token').value.trim();
+  if (!token) return;
+  adminToken = token;
+  setBusy(true);
+  setFeedback('#login-feedback', 'Checking GitHub account…');
+  try {
+    const user = await githubRequest('https://api.github.com/user');
+    if (user.login?.toLowerCase() !== GITHUB_OWNER.toLowerCase()) {
+      throw new Error('This editor only accepts the GitHub account JohnBOK1.');
+    }
+    const file = await readGithubFile();
+    knownFileSha = file?.sha || null;
+    // Use the current repository content, even if Pages has not yet refreshed.
+    if (file?.content && file.encoding === 'base64') {
+      const data = JSON.parse(base64DecodeUnicode(file.content));
+      if (validLetter(data)) {
+        currentLetter = data;
+        renderLetter(currentLetter);
+      }
+    }
+    $('#github-token').value = '';
+    $('#admin-login').hidden = true;
+    $('#admin-edit').hidden = false;
+    $('#admin-logout').hidden = false;
+    setFeedback('#login-feedback', '');
+    setBusy(false);
+    closeDialog('#login-overlay');
+    showEditor();
+  } catch (error) {
+    adminToken = null;
+    knownFileSha = null;
+    setFeedback('#login-feedback', error.message || 'Could not sign in.', 'error');
+    setBusy(false);
+  }
+});
+
+$('#preview-letter').addEventListener('click', () => {
+  try {
+    const draft = readDraft();
+    renderLetter(draft);
+    setFeedback('#editor-feedback', 'Preview ready! Close the editor to view the letter. It is not published yet.', 'success');
+  } catch (error) {
+    setFeedback('#editor-feedback', error.message, 'error');
+  }
+});
+
+$('#editor-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  let draft;
+  try { draft = readDraft(); }
+  catch (error) { setFeedback('#editor-feedback', error.message, 'error'); return; }
+  setBusy(true);
+  setFeedback('#editor-feedback', 'Saving your letter to GitHub…');
+  try {
+    const latest = await readGithubFile();
+    const latestSha = latest?.sha || null;
+    if (latestSha !== knownFileSha) {
+      throw new Error('The letter changed on GitHub since you signed in. Log out, sign in again, and review the latest version before saving.');
+    }
+    const payload = {
+      message: 'Update Bloom Letter through online editor',
+      branch: GITHUB_BRANCH,
+      content: base64EncodeUnicode(JSON.stringify(draft, null, 2) + '\n')
+    };
+    if (latestSha) payload.sha = latestSha;
+    const result = await githubRequest(githubFileUrl, {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    knownFileSha = result.content?.sha || null;
+    currentLetter = draft;
+    renderLetter(currentLetter);
+    setFeedback('#editor-feedback', 'Published to GitHub! Your public site will show the new letter after GitHub Pages deploys.', 'success');
+  } catch (error) {
+    setFeedback('#editor-feedback', error.message || 'Unable to publish the letter.', 'error');
+  } finally {
+    setBusy(false);
+  }
+});
+
+// Visitors see the saved copy. The editor is only needed by the owner.
+renderLetter(currentLetter);
+loadPublishedLetter();

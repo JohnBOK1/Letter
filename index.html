@@ -12,7 +12,15 @@
 </head>
 <body>
   <div class="ambient" aria-hidden="true"><div class="halo halo-one"></div><div class="halo halo-two"></div><div id="falling"></div></div>
-  <header class="topbar"><a class="brand" href="./" aria-label="Bloom home"><span>✿</span> bloom<span class="brand-dot">.</span></a><button id="motion" class="quiet-button" aria-pressed="false">Pause motion <span aria-hidden="true">Ⅱ</span></button></header>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Bloom home"><span>✿</span> bloom<span class="brand-dot">.</span></a>
+    <div class="topbar-actions">
+      <button id="motion" class="quiet-button" aria-pressed="false">Pause motion <span aria-hidden="true">Ⅱ</span></button>
+      <button id="admin-login" class="quiet-button admin-button" type="button">♡ Admin login</button>
+      <button id="admin-edit" class="quiet-button admin-button" type="button" hidden>✎ Edit letter</button>
+      <button id="admin-logout" class="quiet-button" type="button" hidden>Log out</button>
+    </div>
+  </header>
   <main>
     <div class="intro"><p class="eyebrow">A SMALL GESTURE. A LITTLE MAGIC.</p><h1>A little something<br><em>just for you.</em></h1><p class="subtitle">Some things are better said with flowers.</p></div>
     <div class="scene" id="scene">
@@ -42,5 +50,45 @@
     <noscript><p class="noscript">Please enable JavaScript to open your letter.</p></noscript>
   </main>
   <footer>MADE OF LITTLE THINGS <span>♡</span> SENT WITH LOVE</footer>
+  <!-- Admin tools remain hidden until opened. No passwords or tokens are embedded in this page. -->
+  <div id="login-overlay" class="dialog-overlay" hidden>
+    <section class="dialog-card login-card" role="dialog" aria-modal="true" aria-labelledby="login-title">
+      <button type="button" class="dialog-close" id="close-login" aria-label="Close login">×</button>
+      <p class="dialog-eyebrow">JUST FOR THE LETTER'S AUTHOR</p>
+      <h2 id="login-title">Welcome back <span aria-hidden="true">♡</span></h2>
+      <p class="dialog-description">Sign in using a GitHub access token to edit and publish this letter. This token stays in this browser tab only.</p>
+      <form id="login-form">
+        <label for="github-token">GitHub fine-grained access token</label>
+        <input id="github-token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_..." required>
+        <p class="form-note">Use a token for <strong>JohnBOK1 / Letter</strong> with <strong>Contents: Read and write</strong> permission. Never share your token.</p>
+        <p id="login-feedback" class="form-feedback" role="status" aria-live="polite"></p>
+        <button class="primary-action" type="submit" id="login-submit">Unlock editor</button>
+      </form>
+      <a class="support-link" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">Create a GitHub access token ↗</a>
+    </section>
+  </div>
+  <div id="editor-overlay" class="dialog-overlay" hidden>
+    <section class="dialog-card editor-card" role="dialog" aria-modal="true" aria-labelledby="editor-title">
+      <button type="button" class="dialog-close" id="close-editor" aria-label="Close editor">×</button>
+      <p class="dialog-eyebrow">A NOTE, FROM YOUR HEART</p>
+      <h2 id="editor-title">Edit your letter <span aria-hidden="true">✿</span></h2>
+      <p class="dialog-description">Make your changes here, preview them, then publish them to the GitHub Pages website.</p>
+      <form id="editor-form">
+        <label for="edit-greeting">Greeting</label>
+        <input id="edit-greeting" type="text" maxlength="250" placeholder="To the girl I still love," required>
+        <label for="edit-message">Your letter</label>
+        <textarea id="edit-message" rows="12" maxlength="30000" required placeholder="Write your letter here..."></textarea>
+        <p class="form-note">Leave one blank line between paragraphs.</p>
+        <label for="edit-signature">Signature</label>
+        <input id="edit-signature" type="text" maxlength="250" placeholder="Always, with love." required>
+        <p id="editor-feedback" class="form-feedback" role="status" aria-live="polite"></p>
+        <div class="editor-actions">
+          <button type="button" id="preview-letter" class="secondary-action">Preview on page</button>
+          <button type="submit" id="publish-letter" class="primary-action">Save &amp; Publish ♡</button>
+        </div>
+      </form>
+      <p class="form-note publish-note">Publishing creates a commit in your GitHub repository. The public website updates after GitHub Pages finishes deploying.</p>
+    </section>
+  </div>
 </body>
 </html>
