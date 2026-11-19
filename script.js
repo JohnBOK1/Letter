@@ -234,18 +234,14 @@ if (typeof reduced.addEventListener === 'function') {
 reset();
 
 
-// -------- GitHub Pages admin editor --------
-// For a static GitHub Pages site we cannot safely embed a password.
-// Use a short-lived, repository-scoped GitHub PAT entered only in this tab.
-// The token is never written to HTML, localStorage, cookies or the repository.
-const GITHUB_OWNER = 'JohnBOK1';
-const GITHUB_REPO = 'Letter';
-const GITHUB_BRANCH = 'main';
-const LETTER_PATH = 'letter.json';
-const githubFileUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${LETTER_PATH}`;
-let adminToken = null;
-let knownFileSha = null;
-let isBusy = false;
+// -------- Fixed-credential convenience editor for a static GitHub Pages site --------
+// IMPORTANT: This client-side gate is NOT secure access control. Anyone can inspect
+// a public GitHub Pages site or modify browser scripts. It does not give GitHub
+// write access: publishing requires the repository owner to commit letter.json.
+const EDITOR_USERNAME = 'Johnlie';
+const EDITOR_PASSWORD = 'tina123';
+const DRAFT_STORAGE_KEY = 'bloom-letter-draft-v1';
+let editorUnlocked = false;
 
 async function loadPublishedLetter() {
   try {
@@ -256,7 +252,7 @@ async function loadPublishedLetter() {
     currentLetter = data;
     renderLetter(currentLetter);
   } catch (_) {
-    // Opening index.html locally or offline still displays the default letter.
+    // Local files and offline visitors will still see the bundled default letter.
   }
 }
 
@@ -271,18 +267,31 @@ function openDialog(id, focusSelector) {
   $(focusSelector).focus();
 }
 function closeDialog(id) {
-  if (isBusy) return;
   $(id).hidden = true;
   if ($('#login-overlay').hidden && $('#editor-overlay').hidden) {
     document.body.classList.remove('dialog-open');
   }
 }
+function readSavedDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    return validLetter(data) ? data : null;
+  } catch (_) {
+    return null;
+  }
+}
 function showEditor() {
-  if (!adminToken) return;
-  $('#edit-greeting').value = currentLetter.greeting;
-  $('#edit-message').value = currentLetter.paragraphs.join('\n\n');
-  $('#edit-signature').value = currentLetter.signature;
-  setFeedback('#editor-feedback', '');
+  if (!editorUnlocked) return;
+  const saved = readSavedDraft();
+  const data = saved || currentLetter;
+  $('#edit-greeting').value = data.greeting;
+  $('#edit-message').value = data.paragraphs.join('\n\n');
+  $('#edit-signature').value = data.signature;
+  setFeedback('#editor-feedback', saved
+    ? 'Your saved draft from this browser is ready to edit. It is not published on GitHub.'
+    : 'Edit your letter here. Changes are not published until you update GitHub.');
   openDialog('#editor-overlay', '#edit-greeting');
 }
 function readDraft() {
@@ -291,66 +300,32 @@ function readDraft() {
     paragraphs: $('#edit-message').value.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean),
     signature: $('#edit-signature').value.trim()
   };
-  if (!validLetter(draft)) throw new Error('Please add a greeting, at least one paragraph and a signature.');
+  if (!validLetter(draft)) {
+    throw new Error('Please add a greeting, at least one paragraph and a signature.');
+  }
   return draft;
 }
-function setBusy(busy) {
-  isBusy = busy;
-  $('#login-submit').disabled = busy;
-  $('#publish-letter').disabled = busy;
-  $('#preview-letter').disabled = busy;
-  $('#close-login').disabled = busy;
-  $('#close-editor').disabled = busy;
-}
-async function githubRequest(url, options = {}) {
-  if (!adminToken) throw new Error('Please sign in again.');
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      Accept: 'application/vnd.github+json',
-      Authorization: `Bearer ${adminToken}`,
-      'X-GitHub-Api-Version': '2022-11-28',
-      ...(options.headers || {})
-    },
-    cache: 'no-store'
-  });
-  if (!response.ok) {
-    if (response.status === 404 && options.allowMissing) return null;
-    const body = await response.json().catch(() => ({}));
-    let message = body.message || `GitHub request failed (${response.status}).`;
-    if (response.status === 401) message = 'Invalid or expired token. Create a new token and try again.';
-    if (response.status === 403) message = 'Access denied. Check that your token allows Contents: Read and write for the Letter repository.';
-    if (response.status === 409) message = 'The repository changed while saving. Reload the editor and try again.';
-    throw new Error(message);
+function saveLocally(draft) {
+  try {
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+  } catch (_) {
+    throw new Error('This browser blocked local storage. Try downloading letter.json instead.');
   }
-  return response.json();
+  currentLetter = draft;
+  renderLetter(currentLetter);
 }
-async function readGithubFile() {
-  return githubRequest(`${githubFileUrl}?ref=${encodeURIComponent(GITHUB_BRANCH)}&nocache=${Date.now()}`, {allowMissing: true});
-}
-function base64EncodeUnicode(text) {
-  const bytes = new TextEncoder().encode(text);
-  let binary = '';
-  for (let i = 0; i < bytes.length; i += 8192) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
-  }
-  return btoa(binary);
-}
-function base64DecodeUnicode(text) {
-  const binary = atob(text.replace(/\s/g, ''));
-  const bytes = Uint8Array.from(binary, ch => ch.charCodeAt(0));
-  return new TextDecoder().decode(bytes);
+function jsonForGitHub(data) {
+  return JSON.stringify(data, null, 2) + '\n';
 }
 
-$('#admin-login').addEventListener('click', () => openDialog('#login-overlay', '#github-token'));
+$('#admin-login').addEventListener('click', () => openDialog('#login-overlay', '#admin-username'));
 $('#close-login').addEventListener('click', () => closeDialog('#login-overlay'));
 $('#admin-edit').addEventListener('click', showEditor);
 $('#close-editor').addEventListener('click', () => closeDialog('#editor-overlay'));
 $('#admin-logout').addEventListener('click', () => {
-  if (isBusy) return;
-  adminToken = null;
-  knownFileSha = null;
-  $('#github-token').value = '';
+  editorUnlocked = false;
+  $('#admin-username').value = '';
+  $('#admin-password').value = '';
   $('#admin-login').hidden = false;
   $('#admin-edit').hidden = true;
   $('#admin-logout').hidden = true;
@@ -368,89 +343,79 @@ document.addEventListener('keydown', event => {
   else if (!$('#login-overlay').hidden) closeDialog('#login-overlay');
 });
 
-$('#login-form').addEventListener('submit', async event => {
+$('#login-form').addEventListener('submit', event => {
   event.preventDefault();
-  const token = $('#github-token').value.trim();
-  if (!token) return;
-  adminToken = token;
-  setBusy(true);
-  setFeedback('#login-feedback', 'Checking GitHub account…');
-  try {
-    const user = await githubRequest('https://api.github.com/user');
-    if (user.login?.toLowerCase() !== GITHUB_OWNER.toLowerCase()) {
-      throw new Error('This editor only accepts the GitHub account JohnBOK1.');
-    }
-    const file = await readGithubFile();
-    knownFileSha = file?.sha || null;
-    // Use the current repository content, even if Pages has not yet refreshed.
-    if (file?.content && file.encoding === 'base64') {
-      const data = JSON.parse(base64DecodeUnicode(file.content));
-      if (validLetter(data)) {
-        currentLetter = data;
-        renderLetter(currentLetter);
-      }
-    }
-    $('#github-token').value = '';
-    $('#admin-login').hidden = true;
-    $('#admin-edit').hidden = false;
-    $('#admin-logout').hidden = false;
-    setFeedback('#login-feedback', '');
-    setBusy(false);
-    closeDialog('#login-overlay');
-    showEditor();
-  } catch (error) {
-    adminToken = null;
-    knownFileSha = null;
-    setFeedback('#login-feedback', error.message || 'Could not sign in.', 'error');
-    setBusy(false);
+  const username = $('#admin-username').value.trim();
+  const password = $('#admin-password').value;
+  if (username !== EDITOR_USERNAME || password !== EDITOR_PASSWORD) {
+    setFeedback('#login-feedback', 'Incorrect username or password.', 'error');
+    $('#admin-password').value = '';
+    return;
   }
+  editorUnlocked = true;
+  $('#admin-password').value = '';
+  $('#admin-login').hidden = true;
+  $('#admin-edit').hidden = false;
+  $('#admin-logout').hidden = false;
+  setFeedback('#login-feedback', '');
+  closeDialog('#login-overlay');
+  showEditor();
 });
 
 $('#preview-letter').addEventListener('click', () => {
   try {
-    const draft = readDraft();
-    renderLetter(draft);
-    setFeedback('#editor-feedback', 'Preview ready! Close the editor to view the letter. It is not published yet.', 'success');
+    renderLetter(readDraft());
+    setFeedback('#editor-feedback', 'Preview updated. Close the editor to see it. Preview is not saved or published.', 'success');
   } catch (error) {
     setFeedback('#editor-feedback', error.message, 'error');
   }
 });
 
-$('#editor-form').addEventListener('submit', async event => {
+$('#editor-form').addEventListener('submit', event => {
   event.preventDefault();
-  let draft;
-  try { draft = readDraft(); }
-  catch (error) { setFeedback('#editor-feedback', error.message, 'error'); return; }
-  setBusy(true);
-  setFeedback('#editor-feedback', 'Saving your letter to GitHub…');
+  if (!editorUnlocked) return;
   try {
-    const latest = await readGithubFile();
-    const latestSha = latest?.sha || null;
-    if (latestSha !== knownFileSha) {
-      throw new Error('The letter changed on GitHub since you signed in. Log out, sign in again, and review the latest version before saving.');
-    }
-    const payload = {
-      message: 'Update Bloom Letter through online editor',
-      branch: GITHUB_BRANCH,
-      content: base64EncodeUnicode(JSON.stringify(draft, null, 2) + '\n')
-    };
-    if (latestSha) payload.sha = latestSha;
-    const result = await githubRequest(githubFileUrl, {
-      method: 'PUT',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(payload)
-    });
-    knownFileSha = result.content?.sha || null;
-    currentLetter = draft;
-    renderLetter(currentLetter);
-    setFeedback('#editor-feedback', 'Published to GitHub! Your public site will show the new letter after GitHub Pages deploys.', 'success');
+    saveLocally(readDraft());
+    setFeedback('#editor-feedback', 'Draft saved in this browser. For other devices to see it, copy or download letter.json and commit it on GitHub.', 'success');
   } catch (error) {
-    setFeedback('#editor-feedback', error.message || 'Unable to publish the letter.', 'error');
-  } finally {
-    setBusy(false);
+    setFeedback('#editor-feedback', error.message, 'error');
   }
 });
 
-// Visitors see the saved copy. The editor is only needed by the owner.
+$('#download-letter').addEventListener('click', () => {
+  if (!editorUnlocked) return;
+  try {
+    const draft = readDraft();
+    const blob = new Blob([jsonForGitHub(draft)], {type: 'application/json;charset=utf-8'});
+    const fileUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = fileUrl;
+    anchor.download = 'letter.json';
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(fileUrl), 1000);
+    setFeedback('#editor-feedback', 'Downloaded letter.json. Replace the one in your GitHub repository to publish changes.', 'success');
+  } catch (error) {
+    setFeedback('#editor-feedback', error.message, 'error');
+  }
+});
+
+$('#copy-letter').addEventListener('click', async () => {
+  if (!editorUnlocked) return;
+  try {
+    const draft = readDraft();
+    if (!navigator.clipboard?.writeText) {
+      throw new Error('Clipboard is not available in this browser. Use Download letter.json instead.');
+    }
+    await navigator.clipboard.writeText(jsonForGitHub(draft));
+    setFeedback('#editor-feedback', 'Copied! Open letter.json on GitHub below, select all its contents, paste, then Commit changes.', 'success');
+  } catch (error) {
+    setFeedback('#editor-feedback', error.message || 'Could not copy. Download letter.json instead.', 'error');
+  }
+});
+
+// The public published letter always comes from letter.json. A local draft is
+// accessible only when the author opens the editor on the same browser.
 renderLetter(currentLetter);
 loadPublishedLetter();

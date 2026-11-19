@@ -50,21 +50,23 @@
     <noscript><p class="noscript">Please enable JavaScript to open your letter.</p></noscript>
   </main>
   <footer>MADE OF LITTLE THINGS <span>♡</span> SENT WITH LOVE</footer>
-  <!-- Admin tools remain hidden until opened. No passwords or tokens are embedded in this page. -->
+  <!-- Convenience editor: this client-side login cannot securely protect a public GitHub Pages site. -->
   <div id="login-overlay" class="dialog-overlay" hidden>
     <section class="dialog-card login-card" role="dialog" aria-modal="true" aria-labelledby="login-title">
       <button type="button" class="dialog-close" id="close-login" aria-label="Close login">×</button>
       <p class="dialog-eyebrow">JUST FOR THE LETTER'S AUTHOR</p>
       <h2 id="login-title">Welcome back <span aria-hidden="true">♡</span></h2>
-      <p class="dialog-description">Sign in using a GitHub access token to edit and publish this letter. This token stays in this browser tab only.</p>
+      <p class="dialog-description">Enter your editor username and password to change your letter. Your edits are saved in this browser until you publish them through GitHub.</p>
       <form id="login-form">
-        <label for="github-token">GitHub fine-grained access token</label>
-        <input id="github-token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_..." required>
-        <p class="form-note">Use a token for <strong>JohnBOK1 / Letter</strong> with <strong>Contents: Read and write</strong> permission. Never share your token.</p>
+        <label for="admin-username">Username</label>
+        <input id="admin-username" type="text" autocomplete="username" placeholder="Username" required>
+        <label for="admin-password">Password</label>
+        <input id="admin-password" type="password" autocomplete="current-password" placeholder="Password" required>
+        <p class="form-note">This is a simple on-page lock, not a secure private account. GitHub Pages is public and the editor login can be bypassed by someone who inspects the site.</p>
         <p id="login-feedback" class="form-feedback" role="status" aria-live="polite"></p>
         <button class="primary-action" type="submit" id="login-submit">Unlock editor</button>
       </form>
-      <a class="support-link" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">Create a GitHub access token ↗</a>
+
     </section>
   </div>
   <div id="editor-overlay" class="dialog-overlay" hidden>
@@ -72,7 +74,7 @@
       <button type="button" class="dialog-close" id="close-editor" aria-label="Close editor">×</button>
       <p class="dialog-eyebrow">A NOTE, FROM YOUR HEART</p>
       <h2 id="editor-title">Edit your letter <span aria-hidden="true">✿</span></h2>
-      <p class="dialog-description">Make your changes here, preview them, then publish them to the GitHub Pages website.</p>
+      <p class="dialog-description">Edit and preview your letter. Save a draft in this browser, or prepare letter.json for your public GitHub website.</p>
       <form id="editor-form">
         <label for="edit-greeting">Greeting</label>
         <input id="edit-greeting" type="text" maxlength="250" placeholder="To the girl I still love," required>
@@ -84,10 +86,17 @@
         <p id="editor-feedback" class="form-feedback" role="status" aria-live="polite"></p>
         <div class="editor-actions">
           <button type="button" id="preview-letter" class="secondary-action">Preview on page</button>
-          <button type="submit" id="publish-letter" class="primary-action">Save &amp; Publish ♡</button>
+          <button type="submit" id="save-letter" class="primary-action">Save on this device ♡</button>
+          <button type="button" id="download-letter" class="secondary-action">Download letter.json</button>
+          <button type="button" id="copy-letter" class="secondary-action">Copy for GitHub</button>
         </div>
       </form>
-      <p class="form-note publish-note">Publishing creates a commit in your GitHub repository. The public website updates after GitHub Pages finishes deploying.</p>
+      <div class="publish-guide">
+        <p class="publish-title">To update the public website</p>
+        <p>1. Click <strong>Copy for GitHub</strong>. 2. Open the GitHub editor below. 3. Replace all text in <code>letter.json</code> with what you copied and click <strong>Commit changes</strong>.</p>
+        <a class="support-link" id="github-edit-link" href="https://github.com/JohnBOK1/Letter/edit/main/letter.json" target="_blank" rel="noopener noreferrer">Open letter.json on GitHub ↗</a>
+        <p class="form-note">Alternatively, download letter.json and replace the file in VS Code, then git add, commit and push. Saving here alone does not update other devices.</p>
+      </div>
     </section>
   </div>
 </body>

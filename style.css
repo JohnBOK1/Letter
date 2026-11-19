@@ -51,3 +51,10 @@ body.dialog-open{overflow:hidden}
 @media(max-width:520px){.topbar{align-items:flex-start;gap:14px}.topbar-actions{gap:6px}.topbar-actions .quiet-button{padding:9px 10px;font-size:10px}.dialog-overlay{padding:12px}.dialog-card{padding:27px 20px;border-radius:17px;max-height:94svh}.dialog-card h2{font-size:29px}.editor-actions{flex-direction:column}}
 /* Keep the oversize decorative bouquet from widening small phone screens. */
 html{overflow-x:clip}
+
+/* Fixed-login editor: publishing guidance */
+.publish-guide{margin-top:20px;padding:17px 19px;border:1px solid #e7cbd6;background:#fffafb;border-radius:14px}
+.publish-guide p{font-size:12px;line-height:1.7;color:#8d6479;margin:0 0 10px}
+.publish-guide .publish-title{font:italic 18px var(--serif);color:#824c65;margin-bottom:7px}
+.publish-guide .support-link{margin:2px 0 12px}
+.publish-guide code{font-size:12px;color:#9d5576;background:#fceaf1;padding:2px 4px;border-radius:4px}

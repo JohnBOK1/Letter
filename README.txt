@@ -1,57 +1,58 @@
-BLOOM LETTER — ADMIN EDITOR (GitHub Pages)
-===========================================
+BLOOM LETTER — FIXED LOGIN EDITOR
+=================================
+Website: https://johnbok1.github.io/Letter/
 
-The full letter to Tina, envelope, blooms, falling hearts and animation are included.
-This version also includes a top-right "Admin login" button and an online letter editor.
+LOGIN
+Username: Johnlie
+Password: tina123
 
-IMPORTANT: GitHub Pages is static, so a normal username/password login cannot be made secure using HTML/JS alone. This project uses GitHub authentication with a fine-grained personal access token. The token is typed manually into the editor and held only in the tab's memory: never committed or saved in a file/localStorage/cookie.
+This is a CLIENT-SIDE convenience login, not real security. Your GitHub Pages
+repository is public, and a visitor can inspect source code or bypass the
+login. Do not reuse this password for real accounts.
 
-SET UP (ONCE):
-1. Extract this ZIP. It contains index.html, script.js, style.css, letter.json,
-   favicon.svg, README.txt at the root. No extra folder needs to go in the repo.
-2. Copy the files into your LOCAL Letter repository folder in VS Code,
-   replacing the existing website files. Keep your existing vendor folder if any.
-3. In the VS Code terminal inside that repository folder:
+This version removes GitHub access-token login completely. You can edit the
+letter after login, preview it, and save a draft in that browser's local
+storage. Your original animated envelope, flowers, pink theme and complete
+letter to Tina are preserved.
+
+IMPORTANT: A static website cannot use only a hard-coded username/password
+to update the GitHub repository. Saving here does NOT publish the letter to
+other devices. To update the public website, you must commit letter.json.
+
+SET UP THE NEW WEBSITE
+1. Extract this ZIP. The files are at the ZIP root.
+2. Replace index.html, script.js, style.css, letter.json, favicon.svg in
+   your local Letter repository. You can keep the existing vendor folder.
+3. Open VS Code terminal in that repo and run:
       git add .
-      git commit -m "Add admin letter editor"
+      git commit -m "Add fixed login and letter editor"
       git push
-4. Keep GitHub Pages configured to main / (root).
-   Website URL: https://johnbok1.github.io/Letter/
+4. GitHub Pages must use main / (root).
 
-CREATE A GITHUB TOKEN (ONCE PER TOKEN):
-1. Visit https://github.com/settings/personal-access-tokens/new
-2. Token name: Bloom Letter Editor
-3. Resource owner: JohnBOK1
-4. Repository access: Only select repositories > Letter
-5. Repository permissions > Contents > Read and write
-6. Choose an expiration date (short-lived is safer), then generate token.
-7. Copy the token and KEEP IT PRIVATE. Do not commit it to GitHub or share it.
+EDIT & SAVE YOUR DRAFT
+1. Open https://johnbok1.github.io/Letter/
+2. Click Admin login; sign in with the username and password above.
+3. Edit the greeting, letter and signature. Leave a blank line between
+   paragraphs. Preview if you like.
+4. Click Save on this device. It persists ONLY in this browser/device.
+   Logging out hides the editor, not the saved draft.
 
-EDIT THE LETTER (ANY TIME):
-1. Visit your published website on a device you trust.
-2. Click "Admin login" in the top bar, paste the token, click Unlock editor.
-3. Edit greeting / body / signature.
-4. Click Preview on page if you want, then Save & Publish.
-5. A GitHub commit is created updating only letter.json. GitHub Pages will
-   publish it automatically after deployment completes.
-6. Click "Log out" to forget the token from this tab, or close/reload the tab.
+PUBLISH TO ALL DEVICES (NO TOKEN)
+1. In the editor, click Copy for GitHub.
+2. Click Open letter.json on GitHub (sign in to your GitHub account if needed).
+3. Select all the contents of that file, paste the copied JSON and click
+   Commit changes. GitHub Pages will update after deploying.
+Alternatively, click Download letter.json, replace the local file and run:
+      git add letter.json
+      git commit -m "Update letter message"
+      git push
 
-BEHAVIOR:
-- Visitors do not need a login; everyone sees letter.json loaded from the site.
-- Other devices see the latest published version after GitHub Pages deploys.
-- A preview is only visible in your current tab until it is saved.
-- If you edit letter.json somewhere else during an editor session, sign in
-  again to avoid overwriting a newer version.
-- The repository is public, so the letter itself is PUBLIC. The login button
-  only prevents unauthorized editing; it does not make the letter private.
-- If you view the site offline, it still displays the original letter.
+FILES
+- index.html: pink website, login/editor dialogs
+- script.js: flower/envelope animation and fixed-login editor
+- style.css: presentation and mobile styling
+- letter.json: the publicly published editable letter
+- favicon.svg: website icon
+- README.txt: setup and publishing instructions
 
-FILES:
-- index.html: website and admin login/editor dialogs
-- script.js: animations, letter rendering and GitHub editor
-- style.css: entire page and dialogs
-- letter.json: editable content; GitHub editor saves changes here
-- favicon.svg: icon
-- README.txt: these instructions
-
-No Node.js, npm, database or external JS libraries required.
+No token, Node.js, npm, database or external JS libraries are required.
