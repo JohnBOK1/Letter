@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7dbe6">
+  <meta name="description" content="A little letter, a bouquet of blooms, and a moment just for you.">
+  <title>Bloom — a little something for you</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div class="ambient" aria-hidden="true"><div class="halo halo-one"></div><div class="halo halo-two"></div><div id="falling"></div></div>
+  <header class="topbar"><a class="brand" href="./" aria-label="Bloom home"><span>✿</span> bloom<span class="brand-dot">.</span></a><button id="motion" class="quiet-button" aria-pressed="false">Pause motion <span aria-hidden="true">Ⅱ</span></button></header>
+  <main>
+    <div class="intro"><p class="eyebrow">A SMALL GESTURE. A LITTLE MAGIC.</p><h1>A little something<br><em>just for you.</em></h1><p class="subtitle">Some things are better said with flowers.</p></div>
+    <div class="scene" id="scene">
+      <div class="floor-shadow" aria-hidden="true"></div>
+      <div class="world" id="world">
+        <svg class="bouquet" id="bouquet" viewBox="0 0 600 500" aria-hidden="true"><defs>
+          <linearGradient id="rose" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0f4"/><stop offset=".5" stop-color="#ed91b3"/><stop offset="1" stop-color="#bf507f"/></linearGradient>
+          <linearGradient id="peach" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff9ec"/><stop offset=".6" stop-color="#f7b7b0"/><stop offset="1" stop-color="#df8699"/></linearGradient>
+          <linearGradient id="lilac" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f9efff"/><stop offset=".55" stop-color="#d0acd9"/><stop offset="1" stop-color="#a075b0"/></linearGradient>
+          <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a7bba0"/><stop offset="1" stop-color="#627e70"/></linearGradient>
+        </defs><g id="stems"></g><g id="flowers"></g></svg>
+        <div class="envelope" id="envelope" aria-hidden="true">
+          <div class="envelope-back"></div><div class="peek-paper"><span>with love, always</span></div>
+          <div class="envelope-front"></div><div class="envelope-flap" id="flap"></div>
+          <div class="seal" id="seal"><span>♡</span></div><span class="envelope-caption">a little love, sealed inside</span>
+        </div>
+        <button class="envelope-hit" id="open" aria-label="Open your letter" aria-expanded="false" aria-controls="letter"></button>
+        <article class="letter" id="letter" tabindex="-1" aria-label="Your letter" hidden>
+          <div class="paper-rule"></div><span class="letter-flower" aria-hidden="true">✿</span>
+          <p class="letter-kicker">A NOTE FOR YOU</p><h2 id="greeting"></h2><div id="message"></div><p class="signature" id="signature"></p><span class="letter-heart" aria-hidden="true">♡</span>
+        </article>
+      </div>
+      <div class="prompt" id="prompt"><span class="prompt-line"></span><p>Tap the envelope to open</p><span class="tiny-star">✧</span></div>
+    </div>
+    <div class="after" id="after" hidden><p>A few flowers. A thousand little feelings.</p><button id="replay" class="replay-button"><span aria-hidden="true">↺</span> Open again</button></div>
+    <p class="status" role="status" id="status"></p>
+    <noscript><p class="noscript">Please enable JavaScript to open your letter.</p></noscript>
+  </main>
+  <footer>MADE OF LITTLE THINGS <span>♡</span> SENT WITH LOVE</footer>
+</body>
+</html>

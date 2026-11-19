@@ -1,0 +1,13 @@
+GSAP 3.14.2
+Source: https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js
+License: https://gsap.com/standard-license/
+Original copyright/license notice (also preserved in the library):
+
+/*!
+ * GSAP 3.14.2
+ * https://gsap.com
+ * 
+ * @license Copyright 2025, GreenSock. All rights reserved.
+ * Subject to the terms at https://gsap.com/standard-license.
+ * @author: Jack Doyle, jack@greensock.com
+ */
